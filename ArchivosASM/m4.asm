@@ -594,3 +594,5 @@ ponerPiedraC1 macro v1, v2, ficha, movimiento
 		jmp sal
 	sal:
 endm
+
+
