@@ -1,4 +1,32 @@
 ;----------------------------------------------------------------------------------------
+;Fecha y hora
+;----------------------------------------------------------------------------------------
+obtenerHoraFecha macro hora, minuto, segundo, dia, mes, anio
+	
+endm
+
+;----------------------------------------------------------------------------------------
+;conservar y recuperar registros
+;----------------------------------------------------------------------------------------
+pushear macro
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+endm
+
+popear macro
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+endm
+
+;----------------------------------------------------------------------------------------
 ;salida del programa
 ;----------------------------------------------------------------------------------------
 salir macro
@@ -68,7 +96,7 @@ limpiarContenido macro buffer
 	final:
 endm
 
-llenarPosiciones macro v1, v2, v3, v4, v5, v6, v7, v8, v9, contenido
+llenarPosiciones macro v1, v2, v3, v4, v5, v6, v7, v8, v9, contenido, turno
 	LOCAL final, llenar, llenarV1, llenarV2, llenarV3, llenarV4, llenarV5, llenarV6, llenarV7, llenarV8, llenarV9
 	xor si, si
 	xor di, di
@@ -183,6 +211,8 @@ llenarPosiciones macro v1, v2, v3, v4, v5, v6, v7, v8, v9, contenido
 		mov di, 00h
 		jmp llenar
 	final:
+		mov al, contenido[si]
+		mov turno, al
 endm
 
 ;----------------------------------------------------------------------------------------
@@ -271,7 +301,7 @@ leerArchivo macro handler, buffer11, num
 	mov si, 00h
 	mov ah, 3fh
 	mov bx, handler
-	mov cx, num
+	mov cx, SIZEOF buffer11
 	mov dx, offset buffer11
 	
 	int 21h
@@ -279,6 +309,7 @@ leerArchivo macro handler, buffer11, num
 endm
 
 crearArchivo macro buffer, handler
+	
 	mov ah, 3ch
 	mov cx, 00h
 	lea dx, buffer
@@ -296,8 +327,8 @@ escribirArchivo macro handler, buffer
 	jc errorCrear
 endm
 
-pasarInformacion macro contenido, v1, v2, v3, v4, v5, v6, v7, v8, v9
-	LOCAL final, llenar, llenarV1, llenarV2, llenarV3, llenarV4, llenarV5, llenarV6, llenarV7, llenarV8, llenarV9
+pasarInformacion macro contenido, v1, v2, v3, v4, v5, v6, v7, v8, v9, turno
+	LOCAL final, llenar, llenarV1, llenarV2, llenarV3, llenarV4, llenarV5, llenarV6, llenarV7, llenarV8, llenarV9, final2, final3
 	xor si, si
 	xor di, di
 	llenar:
@@ -319,6 +350,7 @@ pasarInformacion macro contenido, v1, v2, v3, v4, v5, v6, v7, v8, v9
 		jl llenarV8
 		cmp si, 51h
 		jl llenarV9
+		xor di, di
 		jmp final
 	llenarV1:
 		mov al, v1[di]
@@ -411,6 +443,15 @@ pasarInformacion macro contenido, v1, v2, v3, v4, v5, v6, v7, v8, v9
 		mov di, 00h
 		jmp llenar
 	final:
+		cmp turno, 4eh
+		jmp final2
+		mov contenido[si], 4eh
+		jmp final3
+	final2:
+		mov contenido[si], 42h
+		jmp final3
+	final3:
+	
 endm
 
 ;----------------------------------------------------------------------------------------
@@ -594,5 +635,7 @@ ponerPiedraC1 macro v1, v2, ficha, movimiento
 		jmp sal
 	sal:
 endm
+
+
 
 

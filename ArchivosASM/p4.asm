@@ -19,7 +19,7 @@ include m4.asm
 ;segmento de pila
 ;----------------------------------------------------------------------------------------
 .stack 100h
-
+include pr4.inc
 ;----------------------------------------------------------------------------------------
 ;segmento de dato
 ;----------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ include m4.asm
 	mi4			db 0ah, 0dh, 	"   Ingrese una opcion: ",'$'
 	;mensajes
 	msj1		db 0ah, 0dh,	"   ******** Ingrese una opcion correcta ********", '$'
-	msj2		db 0ah, 0dh,	"   ******** Saliendo ********", 0ah, '$'
+	msj2		db 0ah, 0ah, 0dh,	"   ******** Saliendo ********", 0ah, '$'
 	msj3		db 0ah, 0dh,	"   ******** Posicion incorrecta ********", 0ah, '$'
 	msj4		db 0ah, 0dh,	"   No se pudo crear el archivo!!", 0ah, '$'
 	;iniciar Juego
@@ -100,10 +100,10 @@ include m4.asm
 	handlerE	dw ?
 	bufferIn	db 100 dup('$')
 	;Reporte html
-	aHtml		db "practica4.html",0
-	bufferHTML	db 5000h	dup('$')
-	htmlEnca    db "<html>", 0ah, 09h, "<head>",  0ah, 09h, 09h, "<title>Practica 4 ARQUI 1</title>", 0ah, 09h, "</head>", 0ah, 09h, "<body>",'$'
-	decTabla	db 0ah, 09h, 09, "<table width=", 22h,"700", 22h, " height=", 22h, "700", 22h, 3bh ," border=", 22h, "25", 22h ," cellspacing=", 22h, "2", 22h, " cellpadding=", 22h, "2", 22h," bgcolor=", 22h, "#000000", 22h, ">", '$'
+	aHtml		db 'estadoTablero.html',0
+	bufferHTML	db 5000h	dup(' ')
+	htmlEnca    db "<html>", 0ah, 09h, "<head>",  0ah, 09h, 09h, "<title>Practica 4 ARQUI 1</title>", 0ah, 09h, "</head>", 0ah, 09h, '<body bgcolor="#FAEACC"><font face="courier" color="#5F0239"><center>',0ah,"<br><h1>Estado del Tablero<h1>",'$'
+	decTabla	db 0ah, 09h, 09, '<table width= "800" height="800"; border="1" cellspacing="2" cellpadding="2"><tr><td background="im0.png"><center><table width=', 22h,"675", 22h, " height=", 22h, "675", 22h, 3bh ," border=", 22h, "0", 22h ," cellspacing=", 22h, "0", 22h, " cellpadding=", 22h, "0", 22h," bgcolor=", 22h, "#000000", 22h, ">", '$'
 	trAbre		db 0ah, 09h, 09h, 09h, "<tr  bgcolor=", 22h, "white", 22h, ">", '$'
 	td1 		db 0ah, 09h, 09h, 09h, 09h, "<td background=", 22h, "im1.png", 22h, "></td>", '$'
 	td2 		db 0ah, 09h, 09h, 09h, 09h, "<td background=", 22h, "im2.png", 22h, "></td>", '$'
@@ -139,12 +139,16 @@ include m4.asm
 	td30 		db 0ah, 09h, 09h, 09h, 09h, "<td background=", 22h, "im30.png", 22h, "></td>", '$'
 
 
+	h1abre		db "<h1 align=", 22h, "center", 22h, ">",'$'
+	h1cierra	db "</h1>",'$'
 	trCierra	db 0ah, 09h, 09h, 09h, "</tr>", '$'
-	tablaCierra	db 0ah, 09h, 09, "</table>", '$'
+	tablaCierra	db 0ah, 09h, 09, "</table></td></tr></table>", '$'
 	finHTML 	db 0ah, 09h, "</body>",0ah,"</html",'$'
-
+	horayF 		db "FECHA:            H:   M:   S:  ",'$'
 	valorSi		dw 00h
 	valorDi		dw 00h
+	finTabla	db 0ah, 09h, 09h, "</table></td></tr></table>",'$'
+	finHT 		db 0ah,09h, "</center></body>",0ah,"</html>",'$'
 
 ;----------------------------------------------------------------------------------------
 ;segmento de codigo
@@ -185,8 +189,9 @@ include m4.asm
   			abrir nombreAr, handlerE
   			leerArchivo handlerE, bufferIn, SIZEOF bufferIn
   			cerrar handlerE
-  			llenarPosiciones vf1, vf2, vf3, vf4, vf5, vf6, vf7, vf8, vf9, bufferIn
+  			llenarPosiciones vf1, vf2, vf3, vf4, vf5, vf6, vf7, vf8, vf9, bufferIn, cntTurno
   			limpiarContenido bufferIn
+  			limpiarContenido handlerE
   			jmp menuinicial
   		errorAbrir:
   			print cErrorAbrir
@@ -286,11 +291,12 @@ include m4.asm
   			jmp reporteHTML
   		comandoSave:
   			limpiarContenido handlerE
+  			limpiarContenido nombreAr
   			print cGuardar
   			print cNombre
   			obtenerRuta nombreAr
   			crearArchivo nombreAr, handlerE
-  			pasarInformacion bufferIn, vf1, vf2, vf3, vf4, vf5, vf6, vf7, vf8, vf9
+  			pasarInformacion bufferIn, vf1, vf2, vf3, vf4, vf5, vf6, vf7, vf8, vf9, cntTurno
   			escribirArchivo handlerE, bufferIn
   			cerrar handlerE
   			limpiarContenido bufferIn
@@ -299,6 +305,7 @@ include m4.asm
   			jmp inicio
   		errorCrear:
   			print msj4
+  			getChar
   			jmp menuinicial
   		validarMovimiento:
   			mov cntPass, 00h
@@ -360,6 +367,7 @@ include m4.asm
 			;sale cuando dos veces se ha pasado de turno
 			jmp salida
 		;******************************************************************************************************************
+		;Parte de HTML
 		;******************************************************************************************************************
 		reporteHTML:
 			xor si, si
@@ -1921,7 +1929,152 @@ include m4.asm
 			jmp final1V
 		final1U:
 			mov di, 00h
-			jmp finalHTML
+			jmp ponerfinTabla
+		ponerfinTabla:
+			xor di, di
+			xor al, al
+			jmp ponerfinTabla1
+		ponerfinTabla1:
+			cmp finTabla[di], 24h
+			je etiquetahora
+			mov al, finTabla[di]
+			mov bufferHTML[si], al
+			inc si
+			inc di
+			jmp ponerfinTabla1
+		;************************************************************************************
+		;Para la hora
+		;************************************************************************************
+		etiquetahora:
+			;mov bufferHTML[si], 0ah
+			;inc si
+			xor di,di
+			xor ax,ax
+			jmp horah1
+		horah1:
+			cmp di,19
+			je obtenerHora
+			mov al,h1abre[di]
+			mov bufferHTML[si],al
+			inc si
+			inc di
+			mov valorSi,si
+			jmp horah1
+		obtenerHora:
+			xor cx, cx
+		    xor dx, dx
+		    xor ax,ax  
+		    mov si, 7
+		    mov ah, 2ah               
+		    int 21h                   
+		    mov al, dl ;obtener dia
+		    aam  
+		    add ah, 30h 
+		    mov horayF[si], ah
+		    inc si 
+		    add al, 30h
+		    mov horayF[si], al
+		    inc si
+		    mov horayF[si], 47
+		    inc si
+		    mov al, dh  ;obtener mes
+		    aam  
+		    add ah, 30h 
+		    mov horayF[si], ah
+		    inc si 
+		    add al, 30h
+		    mov horayF[si], al
+		    inc si
+		    mov horayF[si], 47
+		    inc si
+		    mov horayF[si], 50
+		    inc si
+		    mov horayF[si], 48
+		    inc si
+		    mov horayF[si], 32
+		    inc si
+			xor cx, cx    
+		    xor dx, dx 
+		    mov ah, 2ch
+		 	int 21h 
+		    inc si
+		    inc si
+		    inc si
+		    inc si 
+
+		    mov al, ch    ; obtener hora 
+		    aam  
+		    add ah, 30h 
+		    mov horayF[si], ah
+		    inc si 
+		    add al, 30h
+		    mov horayF[si], al
+		    inc si
+		    mov horayF[si], 4dh
+		    inc si
+		    mov horayF[si],58
+		    inc si  
+		    
+		    mov al, cl    ;obtener minutos
+		    aam  
+		    add ah, 30h 
+		    mov horayF[si], ah
+		    inc si 
+		    add al, 30h
+		    mov horayF[si], al
+		    inc si
+		    mov horayF[si], 53h
+		    inc si
+		    mov horayF[si],58
+		    inc si
+
+    		mov al, dh    ;obtener segundos
+		    aam  
+		    add ah, 30h 
+		    mov horayF[si], ah
+		    inc si 
+		    add al, 30h
+		    mov horayF[si], al
+		    inc si
+		    mov horayF[si], 24h
+		    jmp guardarHora
+		 guardarHora:
+		 	mov si,valorSi
+		 	xor di,di
+		 	xor ax,ax
+		 	jmp ponerhora
+		 ponerhora:	
+		 	cmp horayF[di], 24h
+		 	je ponerfinh
+		 	mov al,horayF[di]
+		 	mov bufferHTML[si],al
+		 	inc si 
+		 	inc di
+		 	jmp ponerhora
+		ponerfinh:
+			xor di,di
+			xor ax,ax
+			jmp ponerfinh1
+		ponerfinh1:
+			cmp h1cierra[di], 24h
+			je finaArchivoHTML
+			mov al,h1cierra[di]
+			mov bufferHTML[si],al
+			inc si
+			inc di 
+			jmp ponerfinh1
+		finaArchivoHTML:
+			xor di, di
+			jmp finalArchivoHTML1
+		finalArchivoHTML1:
+			cmp finHT[di], 24h
+			je finalHTML
+			mov al, finHT[di]
+			mov bufferHTML[si], al
+			xor al, al
+			inc si
+			inc di
+			jmp finalArchivoHTML1
 		finalHTML:
 			limpiarContenido handlerE
   			crearArchivo aHtml, handlerE
